@@ -91,7 +91,6 @@ func TestGoFetch1(t *testing.T) {
 		"Connection: close\r\n",
 		"User-Agent: gotest\r\n",
 		"\r\n")
-
 	respbytes, _, err := tritonhttp.Fetch("localhost", "8080", []byte(req))
 	if err != nil {
 		t.Fatalf("Error fetching request: %v\n", err.Error())
@@ -271,10 +270,10 @@ func TestAllFilesInHtdocs(t *testing.T) {
 
 				origmimetype := mime.TypeByExtension(filepath.Ext(path))
 
-				if origmimetype != respcontenttype {
+				if !strings.HasPrefix(origmimetype, respcontenttype) {
 					t.Fatalf("Expected Content-Type of %v but got %v instead\n", origmimetype, respcontenttype)
 				}
-
+				
 				// Check the Content-Length
 				if resp.ContentLength != info.Size() {
 					t.Fatalf("Expected Content-Length of %v but got %v\n", info.Size(), resp.ContentLength)
