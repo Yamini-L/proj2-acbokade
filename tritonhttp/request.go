@@ -91,13 +91,13 @@ func ReadAllLines(conn net.Conn, remaining *string) ([][]string, error) {
 		return nil, err
 	}
 	*remaining += string(buf[:n])
-	fmt.Println("before remaining", *remaining, len(*remaining))
+	fmt.Println("Before remaining", *remaining, len(*remaining))
 	requestsLinesArr = checkForFullRequestsInString(remaining)
 	if len(requestsLinesArr) > 0 {
 		linesArr = append(linesArr, requestsLinesArr...)
 	}
-	fmt.Println("after remaining", *remaining, len(*remaining))
-	fmt.Println("linesArr", linesArr)
+	fmt.Println("After remaining", *remaining, len(*remaining))
+	fmt.Println("LinesArr", linesArr)
 	return linesArr, nil
 }
 
@@ -121,33 +121,13 @@ func parseRequestLine(line string) (string, string, string, error) {
 }
 
 // Method which reads request from the given reader of the connection
-func HandleRequest(requestString []string) (req *Request, err error) {
+func HandleRequest(requestString []string) (req *Request, errors []error) {
 	// Initialize request object
 	req = &Request{}
 	req.Headers = make(map[string]string)
 
-	// Read start line
-	initialRequestLine := requestString[0]
-	req.Method, req.URL, req.Proto, err = parseRequestLine(string(initialRequestLine))
-	if err != nil {
-		fmt.Println("Error while parsing request line", err)
-		return nil, err
-	}
-	fmt.Println(req.Method)
-	// Only GET method is supported and well formed URL starts with /
-	if req.Method != GET {
-		fmt.Println("Invalid method")
-		return nil, fmt.Errorf("invalid method")
-	}
-	if len(req.URL) == 0 || (req.URL[0] != '\\' && req.URL[0] != '/') {
-		fmt.Println("URL doesnt start with slash")
-		return nil, fmt.Errorf("url doesnt start with slash")
-	}
-	if req.Proto != "HTTP/1.1" {
-		fmt.Println("protocol is not HTTP/1.1")
-		return nil, fmt.Errorf("protocol is not HTTP/1.1")
-	}
 	remainingLines := requestString[1:]
+	var err error = nil
 	for {
 		if len(remainingLines) == 0 {
 			break
@@ -156,13 +136,18 @@ func HandleRequest(requestString []string) (req *Request, err error) {
 		res := strings.Split(line, ":")
 		if len(res) != 2 {
 			// Not in proper form: maybe colon is missing
-			return nil, fmt.Errorf("Error parsing request header")
+			errors = append(errors, fmt.Errorf("error parsing request header"))
+			remainingLines = remainingLines[1:]
+			if len(remainingLines) == 0 {
+				break
+			}
+			continue
 		}
 		key, value := res[0], res[1]
 		key = CanonicalHeaderKey(key)
 		// Remove all leading and trailing space from value
 		value = strings.TrimSpace(value)
-		fmt.Println("key value", key, value)
+		fmt.Println("Key value", key, value)
 		if key == HOST {
 			fmt.Println("Setting host", value)
 			req.Host = value
@@ -176,7 +161,33 @@ func HandleRequest(requestString []string) (req *Request, err error) {
 			break
 		}
 	}
-	return req, nil
+
+	// Read start line
+	initialRequestLine := requestString[0]
+	req.Method, req.URL, req.Proto, err = parseRequestLine(string(initialRequestLine))
+	if err != nil {
+		fmt.Println("Error while parsing request line", err)
+		errors = append(errors, err)
+		return req, errors
+	}
+	fmt.Println("Method: ", req.Method)
+	// Only GET method is supported and well formed URL starts with /
+	if req.Method != GET {
+		fmt.Println("Invalid method")
+		errors = append(errors, fmt.Errorf("invalid method"))
+		return req, errors
+	}
+	if len(req.URL) == 0 || (req.URL[0] != '\\' && req.URL[0] != '/') {
+		fmt.Println("URL doesnt start with slash")
+		errors = append(errors, fmt.Errorf("url doesnt start with slash"))
+		return req, errors
+	}
+	if req.Proto != "HTTP/1.1" {
+		fmt.Println("protocol is not HTTP/1.1")
+		errors = append(errors, fmt.Errorf("protocol is not HTTP/1.1"))
+		return req, errors
+	}
+	return req, errors
 }
 
 

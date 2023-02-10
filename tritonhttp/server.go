@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"errors"
-	"io"
 	"net"
 	"time"
 )
@@ -29,7 +27,7 @@ type Server struct {
 // Method which checks the validity of the current working directory
 func (s Server) ValidateServerSetup() error {
 	cwd, err := os.Getwd()
-	fmt.Println("validity server setup cwd", cwd)
+	fmt.Println("Validity server setup cwd: ", cwd)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,11 +63,10 @@ func (s *Server) ListenAndServe() error {
 }
 
 func (s *Server) HandleConnection(conn net.Conn) {
-	// remaining is the string which contains the http request which is not
+	// Remaining is the string which contains the http request which is not
 	// yet parsed but received
 	var remaining string = ""
 	for {
-		fmt.Println("for loop")
 		// Set both read and write timeout
 		if err := conn.SetReadDeadline(time.Now().Add(RECV_TIMEOUT)); err != nil {
 			_ = conn.Close()
@@ -84,51 +81,36 @@ func (s *Server) HandleConnection(conn net.Conn) {
 		allLines, err := ReadAllRequests(conn, &remaining)
 		// Handle each request sent
 		for _, singleReq := range allLines {
-			req, err := HandleRequest(singleReq)
-			if err != nil {
-				fmt.Println("first error", err)
+			req, errors := HandleRequest(singleReq)
+			if len(errors) > 0 {
+				fmt.Println("******** Handle Request Error **********")
+				fmt.Println("Errors: ", errors)
 				res := &Response{}
 				res.Headers = make(map[string] string)
 				res.HandleBadRequest()
+				if (req.Headers[CONNECTION] == CLOSE) {
+					res.Headers[CONNECTION] = CLOSE
+				}
 				_ = res.Write(conn)
-				_ = conn.Close()
-				continue
-			}
-
-			// Handle errors
-			// Error 1: Client has closed the conn => io.EOF error
-			if errors.Is(err, io.EOF) {
-				_ = conn.Close()
-				continue
-			}
-
-			// Error 2: Timeout from the server --> net.Error
-			// timeout in this application means we just close the connection
-			// Note : proj3 might require you to do a bit more here
-			if err, ok := err.(net.Error); ok && err.Timeout() {
-				_ = conn.Close()
-				continue
-			}
-
-			// Error 3: malformed/invalid request
-			// Handle the request which is not a GET and immediately close the connection and return
-			if err != nil {
-				res := &Response{}
-				res.Headers = make(map[string] string)
-				res.HandleBadRequest()
-				_ = res.Write(conn)
-				_ = conn.Close()
+				if (req.Headers[CONNECTION] == CLOSE) {
+					_ = conn.Close()
+				}
 				continue
 			}
 
 			// Host not present, send 400 client error
 			if len(req.Host) == 0 {
-				fmt.Println("host not present")
+				fmt.Println("Host not present")
 				res := &Response{}
 				res.Headers = make(map[string] string)
 				res.HandleBadRequest()
+				if (req.Headers[CONNECTION] == CLOSE) {
+					res.Headers[CONNECTION] = CLOSE
+				}
 				_ = res.Write(conn)
-				_ = conn.Close()
+				if (req.Headers[CONNECTION] == CLOSE) {
+					_ = conn.Close()
+				}
 				continue
 			}
 
@@ -137,17 +119,20 @@ func (s *Server) HandleConnection(conn net.Conn) {
 			res := s.HandleGoodRequest(req)
 			err = res.Write(conn)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("Res Write: ", err)
 			}
 			if (req.Headers[CONNECTION] == CLOSE) {
 				conn.Close()
-				fmt.Println("handle connection returned")
+				fmt.Println("Handle connection returned")
 				break
 			}
 		}
+	
 		// Connection timeout
 		if (err != nil) {
-			fmt.Println("ReadAllRequsts err", err)
+			fmt.Println("********* Connection timeout **********")
+			fmt.Println("ReadAllRequests err: ", err)
+			fmt.Println("Is error timeout: ", err.(net.Error).Timeout())
 			// Client hasn't send anything now, hence close the connection
 			if (len(remaining) == 0) {
 				_ = conn.Close()

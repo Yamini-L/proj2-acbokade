@@ -45,35 +45,24 @@ var statusText = map[int]string{
 	statusNotFound: "Not Found",
 }
 
-
-// HandleOK prepares res to be a 200 OK response
-// ready to be written back to client.
-func (res *Response) HandleOK() {
-	res.StatusCode = statusOK
+func (res *Response) AddProto(proto string) {
+	res.Proto = proto
 }
 
-// HandleBadRequest prepares res to be a 405 Method Not allowed response
 func (res *Response) HandleStatusNotFound() {
 	res.AddProto(responseProto)
 	res.StatusCode = statusNotFound
 	res.FilePath = ""
 	res.Headers = make(map[string]string)
-	res.Headers["Connection"] = "close"
 	res.Headers["Date"] = FormatTime(time.Now())
 }
 
-// HandleBadRequest prepares res to be a 405 Method Not allowed response
 func (res *Response) HandleBadRequest() {
 	res.AddProto(responseProto)
 	res.StatusCode = statusBadRequest
 	res.FilePath = ""
 	res.Headers = make(map[string]string)
-	res.Headers["Connection"] = "close"
 	res.Headers["Date"] = FormatTime(time.Now())
-}
-
-func (res *Response) AddProto(proto string) {
-	res.Proto = proto
 }
 
 func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
@@ -88,27 +77,30 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	url := req.URL
 	connection := req.Headers[CONNECTION]
 	virtualHost, exists := s.VirtualHosts[host]
-	fmt.Println("exists", exists)
-	fmt.Println("url ", url)
-	fmt.Println("host ", host)
+	fmt.Println("Exists: ", exists)
+	fmt.Println("Url: ", url)
+	fmt.Println("Host: ", host)
+	fmt.Println("VirtualHost: ", virtualHost)
+	fmt.Println("Cwd: ", cwd)
 	if !exists {
-		fmt.Println("host not exists in virtualHost")
+		fmt.Println("Host not exists in virtualHost")
 		res.HandleBadRequest()
+		if (req.Headers[CONNECTION] == CLOSE) {
+			res.Headers[CONNECTION] = CLOSE
+		}
 		return res
 	}
 	reqFile := filepath.Join(cwd, virtualHost)
-	fmt.Println("reqFile", reqFile,cwd,virtualHost)
-	fmt.Println("url", url)
 	// If URL ends with /, interpret as index.html
 	if url[len(url) - 1] == '/' {
-		fmt.Println("url ends with /")
+		fmt.Println("Url ends with /")
 		reqFile = filepath.Join(reqFile, url, "index.html")
 	} else {
 		reqFile = filepath.Join(reqFile, url)
 	}
-	fmt.Println("before clean", reqFile)
+	fmt.Println("Before clean: ", reqFile)
 	reqFile = filepath.Clean(reqFile)
-	fmt.Println("after clean", reqFile)
+	fmt.Println("After clean: ", reqFile)
 	// Check if reqFile is outside the parent directory
 	// cwd must be a substring of reqFile
 	if !strings.HasPrefix(reqFile, projectDir) {
@@ -116,7 +108,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 		return res
 	}
 	res.FilePath = reqFile
-	fmt.Println("reqFile", reqFile)
+	fmt.Println("ReqFile: ", reqFile)
 	// Read file
 	res.AddProto(responseProto)
 	stats, err := os.Stat(reqFile)
@@ -126,7 +118,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 		return res
 	}
 	res.StatusCode = 200 
-	fmt.Println("stats", stats)
+	fmt.Println("Stats: ", stats)
 	res.Headers["Content-Length"] = strconv.FormatInt(stats.Size(), 10)
 	res.Headers["Content-Type"] = MIMETypeByExtension(filepath.Ext(reqFile))
 	res.Headers["Date"] = FormatTime(time.Now())
@@ -134,7 +126,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	if connection == CLOSE {
 		res.Headers["Connection"] = CLOSE
 	}
-	fmt.Println("Response to be sent", res)
+	// fmt.Println("Response to be sent: ", res)
 	return res
 }
 
@@ -142,7 +134,7 @@ func (res *Response) Write(w io.Writer) error {
 	bw := bufio.NewWriter(w)
 	// Write status line
 	statusLine := fmt.Sprintf("%v %v %v\r\n", res.Proto, res.StatusCode, statusText[res.StatusCode])
-	fmt.Println("write statusLine:",statusLine)
+	fmt.Println("Write statusLine: ",statusLine)
 	if _, err := bw.WriteString(statusLine); err != nil {
 		return err
 	}
@@ -159,12 +151,11 @@ func (res *Response) Write(w io.Writer) error {
 		if _, err := bw.WriteString(keyValue); err != nil {
 			return err
 		}
-		fmt.Println("write header:",keyValue)
+		fmt.Println("Write header: ",keyValue)
 	}
 	if _, err := bw.WriteString("\r\n"); err != nil {
 		return err
 	}
-
 	// Write Body
 	filePath := res.FilePath
 	if len(filePath) > 0 {
@@ -175,11 +166,10 @@ func (res *Response) Write(w io.Writer) error {
 		if _, err := bw.Write(data); err != nil {
 			return err
 		}
-		fmt.Println("write data:",data)
+		fmt.Println("Write data:", len(data))
 	}
 	if err := bw.Flush(); err != nil {
 		return nil
 	}
-
 	return nil
 }
