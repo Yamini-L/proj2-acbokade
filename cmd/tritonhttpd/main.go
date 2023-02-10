@@ -32,7 +32,7 @@ func main() {
 	log.Printf("  path to docroot directories: %v", *docroot_dirs_path)
 	fmt.Println()
 
-	virtualHosts := tritonhttp.ParseVHConfigFile(*vh_config_path, *docroot_dirs_path)
+	virtualHosts := tritonhttp.ParseVHConfigFile("../../virtual_hosts.yaml", "../../docroot_dirs")
 
 	// Start server
 	addr := fmt.Sprintf(":%v", *port)
