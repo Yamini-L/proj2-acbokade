@@ -84,15 +84,21 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	fmt.Println("Cwd: ", cwd)
 	if !exists {
 		fmt.Println("Host not exists in virtualHost")
-		res.HandleBadRequest()
+		res.HandleStatusNotFound()
 		if (req.Headers[CONNECTION] == CLOSE) {
 			res.Headers[CONNECTION] = CLOSE
 		}
 		return res
 	}
 	reqFile := filepath.Join(cwd, virtualHost)
+	pathStats, err := os.Stat(reqFile)
+	if errors.Is(err, os.ErrNotExist) {
+		log.Println("Invalid path", err)
+		res.HandleStatusNotFound()
+		return res
+	}
 	// If URL ends with /, interpret as index.html
-	if url[len(url) - 1] == '/' {
+	if pathStats.IsDir() || url[len(url) - 1] == '/' {
 		fmt.Println("Url ends with /")
 		reqFile = filepath.Join(reqFile, url, "index.html")
 	} else {
@@ -113,7 +119,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	res.AddProto(responseProto)
 	stats, err := os.Stat(reqFile)
 	if errors.Is(err, os.ErrNotExist) {
-		log.Println("No file", err)
+		log.Println("No file or invalid file", err)
 		res.HandleStatusNotFound()
 		return res
 	}

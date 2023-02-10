@@ -182,7 +182,7 @@ func HandleRequest(requestString []string) (req *Request, errors []error) {
 		errors = append(errors, fmt.Errorf("url doesnt start with slash"))
 		return req, errors
 	}
-	if req.Proto != "HTTP/1.1" {
+	if req.Proto != responseProto {
 		fmt.Println("protocol is not HTTP/1.1")
 		errors = append(errors, fmt.Errorf("protocol is not HTTP/1.1"))
 		return req, errors
