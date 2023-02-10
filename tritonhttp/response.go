@@ -91,7 +91,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 		return res
 	}
 	reqFile := filepath.Join(cwd, virtualHost)
-	pathStats, err := os.Stat(reqFile)
+	pathStats, err := os.Stat(filepath.Join(reqFile, url))
 	if errors.Is(err, os.ErrNotExist) {
 		log.Println("Invalid path", err)
 		res.HandleStatusNotFound()
