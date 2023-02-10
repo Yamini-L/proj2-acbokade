@@ -72,10 +72,10 @@ func (s *Server) HandleConnection(conn net.Conn) {
 			_ = conn.Close()
 			return
 		}
-		if err := conn.SetWriteDeadline(time.Now().Add(SEND_TIMEOUT)); err != nil {
-			_ = conn.Close()
-			return
-		}
+		// if err := conn.SetWriteDeadline(time.Now().Add(SEND_TIMEOUT)); err != nil {
+		// 	_ = conn.Close()
+		// 	return
+		// }
 
 		// Read the requests sent by the client (it could be multiple HTTP requests)
 		allLines, err := ReadAllRequests(conn, &remaining)
@@ -124,6 +124,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 				log.Println("Res Write: ", err)
 			}
 			if (req.Headers[CONNECTION] == CLOSE) {
+				res.Headers[CONNECTION] = CLOSE
 				conn.Close()
 				log.Println("Handle connection returned")
 				break
@@ -140,12 +141,16 @@ func (s *Server) HandleConnection(conn net.Conn) {
 				_ = conn.Close()
 				return
 			}
+			log.Println("Length of remaining: ", len(remaining))
 			// Client has sent partial request
 			// Respond with 400 client error
 			res := &Response{}
 			res.Headers = make(map[string] string)
 			res.HandleBadRequest()
-			_ = res.Write(conn)
+			err = res.Write(conn)
+			if err != nil {
+				log.Println("Res Write: ", err)
+			}
 			_ = conn.Close()
 			return
 		}

@@ -187,6 +187,7 @@ func (res *Response) Write(w io.Writer) error {
 	}
 	fmt.Println("Write done")
 	if err := bw.Flush(); err != nil {
+		log.Println("Flush error: ", err)
 		return nil
 	}
 	return nil
