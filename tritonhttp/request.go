@@ -177,7 +177,7 @@ func HandleRequest(requestString []string) (req *Request, errors []error) {
 		errors = append(errors, fmt.Errorf("invalid method"))
 		return req, errors
 	}
-	if len(req.URL) == 0 || (req.URL[0] != '\\' && req.URL[0] != '/') {
+	if len(req.URL) == 0 || req.URL[0] != '/' {
 		fmt.Println("URL doesnt start with slash")
 		errors = append(errors, fmt.Errorf("url doesnt start with slash"))
 		return req, errors
