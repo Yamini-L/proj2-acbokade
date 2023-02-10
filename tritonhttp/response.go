@@ -95,6 +95,9 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	if errors.Is(err, os.ErrNotExist) {
 		log.Println("Invalid path", err)
 		res.HandleStatusNotFound()
+		if (req.Headers[CONNECTION] == CLOSE) {
+			res.Headers[CONNECTION] = CLOSE
+		}
 		return res
 	}
 	// If URL ends with /, interpret as index.html
