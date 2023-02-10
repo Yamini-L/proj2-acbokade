@@ -134,8 +134,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 		if (err != nil) {
 			log.Println("********* Connection timeout **********")
 			log.Println("ReadAllRequests err: ", err)
-			log.Println("ReadAllRequests err: ", err)
-			log.Println("Is error timeout: ", err.(net.Error).Timeout())
+			// log.Println("Is error timeout: ", err.(net.Error).Timeout())
 			// Client hasn't send anything now, hence close the connection
 			if (len(remaining) == 0) {
 				_ = conn.Close()

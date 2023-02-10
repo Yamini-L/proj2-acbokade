@@ -109,8 +109,13 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	fmt.Println("After clean: ", reqFile)
 	// Check if reqFile is outside the parent directory
 	// cwd must be a substring of reqFile
+	fmt.Println("ProjectDir: ", projectDir)
+	fmt.Println("Is prefix: ", strings.HasPrefix(reqFile, projectDir))
 	if !strings.HasPrefix(reqFile, projectDir) {
 		res.HandleStatusNotFound()
+		if (req.Headers[CONNECTION] == CLOSE) {
+			res.Headers[CONNECTION] = CLOSE
+		}
 		return res
 	}
 	res.FilePath = reqFile
@@ -121,6 +126,9 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	if errors.Is(err, os.ErrNotExist) {
 		log.Println("No file or invalid file", err)
 		res.HandleStatusNotFound()
+		if (req.Headers[CONNECTION] == CLOSE) {
+			res.Headers[CONNECTION] = CLOSE
+		}
 		return res
 	}
 	res.StatusCode = 200 
@@ -174,6 +182,7 @@ func (res *Response) Write(w io.Writer) error {
 		}
 		fmt.Println("Write data:", len(data))
 	}
+	fmt.Println("Write done")
 	if err := bw.Flush(); err != nil {
 		return nil
 	}
