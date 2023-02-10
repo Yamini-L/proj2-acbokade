@@ -94,6 +94,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 				_ = res.Write(conn)
 				if (req.Headers[CONNECTION] == CLOSE) {
 					_ = conn.Close()
+					return
 				}
 				continue
 			}
@@ -110,6 +111,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 				_ = res.Write(conn)
 				if (req.Headers[CONNECTION] == CLOSE) {
 					_ = conn.Close()
+					return
 				}
 				continue
 			}
