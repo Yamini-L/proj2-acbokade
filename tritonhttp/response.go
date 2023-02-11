@@ -141,7 +141,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	res.Headers["Date"] = FormatTime(time.Now())
 	res.Headers["Last-Modified"] = FormatTime(stats.ModTime())
 	if connection == CLOSE {
-		res.Headers["Connection"] = CLOSE
+		res.Headers[CONNECTION] = CLOSE
 	}
 	// fmt.Println("Response to be sent: ", res)
 	return res

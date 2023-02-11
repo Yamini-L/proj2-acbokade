@@ -10,6 +10,7 @@ import (
 
 const (
 	TCP = "tcp"
+	RECIEVE_TIMEOUT time.Duration = 5 * time.Second
 )
 
 type Server struct {
@@ -67,8 +68,9 @@ func (s *Server) HandleConnection(conn net.Conn) {
 	// yet parsed but received
 	var remaining string = ""
 	for {
+		log.Println("## For loop #")
 		// Set both read and write timeout
-		if err := conn.SetReadDeadline(time.Now().Add(RECV_TIMEOUT)); err != nil {
+		if err := conn.SetReadDeadline(time.Now().Add(RECIEVE_TIMEOUT)); err != nil {
 			_ = conn.Close()
 			return
 		}
@@ -135,13 +137,13 @@ func (s *Server) HandleConnection(conn net.Conn) {
 		if (err != nil) {
 			log.Println("********* Connection timeout **********")
 			log.Println("ReadAllRequests err: ", err)
+			log.Println("Length of remaining: ", len(remaining))
 			// log.Println("Is error timeout: ", err.(net.Error).Timeout())
 			// Client hasn't send anything now, hence close the connection
 			if (len(remaining) == 0) {
 				_ = conn.Close()
 				return
 			}
-			log.Println("Length of remaining: ", len(remaining))
 			// Client has sent partial request
 			// Respond with 400 client error
 			res := &Response{}
