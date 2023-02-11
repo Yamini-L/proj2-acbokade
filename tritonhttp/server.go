@@ -126,7 +126,6 @@ func (s *Server) HandleConnection(conn net.Conn) {
 				log.Println("Res Write: ", err)
 			}
 			if (req.Headers[CONNECTION] == CLOSE) {
-				res.Headers[CONNECTION] = CLOSE
 				conn.Close()
 				log.Println("Handle connection returned")
 				break
