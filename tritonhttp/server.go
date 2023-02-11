@@ -148,6 +148,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 			res := &Response{}
 			res.Headers = make(map[string] string)
 			res.HandleBadRequest()
+			res.Headers[CONNECTION] = CLOSE
 			err = res.Write(conn)
 			if err != nil {
 				log.Println("Res Write: ", err)
