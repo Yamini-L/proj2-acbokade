@@ -28,7 +28,7 @@ type Server struct {
 // Method which checks the validity of the current working directory
 func (s Server) ValidateServerSetup() error {
 	cwd, err := os.Getwd()
-	log.Println("Validity server setup cwd: ", cwd)
+	// log.Println("Validity server setup cwd: ", cwd)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 	// yet parsed but received
 	var remaining string = ""
 	for {
-		log.Println("## For loop #")
+		// log.Println("## For loop #")
 		// Set both read and write timeout
 		if err := conn.SetReadDeadline(time.Now().Add(RECIEVE_TIMEOUT)); err != nil {
 			_ = conn.Close()
@@ -85,8 +85,8 @@ func (s *Server) HandleConnection(conn net.Conn) {
 		for _, singleReq := range allLines {
 			req, errors := HandleRequest(singleReq)
 			if len(errors) > 0 {
-				log.Println("******** Handle Request Error **********")
-				log.Println("Errors: ", errors)
+				// log.Println("******** Handle Request Error **********")
+				// log.Println("Errors: ", errors)
 				res := &Response{}
 				res.Headers = make(map[string] string)
 				res.HandleBadRequest()
@@ -103,7 +103,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 
 			// Host not present, send 400 client error
 			if len(req.Host) == 0 {
-				log.Println("Host not present")
+				// log.Println("Host not present")
 				res := &Response{}
 				res.Headers = make(map[string] string)
 				res.HandleBadRequest()
@@ -119,24 +119,24 @@ func (s *Server) HandleConnection(conn net.Conn) {
 			}
 
 			// Handle good request
-			log.Println("Handling good request")
+			// log.Println("Handling good request")
 			res := s.HandleGoodRequest(req)
 			err = res.Write(conn)
 			if err != nil {
-				log.Println("Res Write: ", err)
+				// log.Println("Res Write: ", err)
 			}
 			if (req.Headers[CONNECTION] == CLOSE) {
 				conn.Close()
-				log.Println("Handle connection returned")
+				// log.Println("Handle connection returned")
 				break
 			}
 		}
 	
 		// Connection timeout
 		if (err != nil) {
-			log.Println("********* Connection timeout **********")
-			log.Println("ReadAllRequests err: ", err)
-			log.Println("Length of remaining: ", len(remaining))
+			// log.Println("********* Connection timeout **********")
+			// log.Println("ReadAllRequests err: ", err)
+			// log.Println("Length of remaining: ", len(remaining))
 			// log.Println("Is error timeout: ", err.(net.Error).Timeout())
 			// Client hasn't send anything now, hence close the connection
 			if (len(remaining) == 0) {
@@ -151,7 +151,7 @@ func (s *Server) HandleConnection(conn net.Conn) {
 			res.Headers[CONNECTION] = CLOSE
 			err = res.Write(conn)
 			if err != nil {
-				log.Println("Res Write: ", err)
+				// log.Println("Res Write: ", err)
 			}
 			_ = conn.Close()
 			return
