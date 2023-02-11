@@ -77,13 +77,13 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	url := req.URL
 	connection := req.Headers[CONNECTION]
 	virtualHost, exists := s.VirtualHosts[host]
-	fmt.Println("Exists: ", exists)
-	fmt.Println("Url: ", url)
-	fmt.Println("Host: ", host)
-	fmt.Println("VirtualHost: ", virtualHost)
-	fmt.Println("Cwd: ", cwd)
+	// fmt.Println("Exists: ", exists)
+	// fmt.Println("Url: ", url)
+	// fmt.Println("Host: ", host)
+	// fmt.Println("VirtualHost: ", virtualHost)
+	// fmt.Println("Cwd: ", cwd)
 	if !exists {
-		fmt.Println("Host not exists in virtualHost")
+		// fmt.Println("Host not exists in virtualHost")
 		res.HandleStatusNotFound()
 		if (req.Headers[CONNECTION] == CLOSE) {
 			res.Headers[CONNECTION] = CLOSE
@@ -93,7 +93,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	reqFile := filepath.Join(cwd, virtualHost)
 	pathStats, err := os.Stat(filepath.Join(reqFile, url))
 	if errors.Is(err, os.ErrNotExist) {
-		log.Println("Invalid path", err)
+		// log.Println("Invalid path", err)
 		res.HandleStatusNotFound()
 		if (req.Headers[CONNECTION] == CLOSE) {
 			res.Headers[CONNECTION] = CLOSE
@@ -102,18 +102,18 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 	}
 	// If URL ends with /, interpret as index.html
 	if pathStats.IsDir() || url[len(url) - 1] == '/' {
-		fmt.Println("Url ends with /")
+		// fmt.Println("Url ends with /")
 		reqFile = filepath.Join(reqFile, url, "index.html")
 	} else {
 		reqFile = filepath.Join(reqFile, url)
 	}
-	fmt.Println("Before clean: ", reqFile)
+	// fmt.Println("Before clean: ", reqFile)
 	reqFile = filepath.Clean(reqFile)
-	fmt.Println("After clean: ", reqFile)
+	// fmt.Println("After clean: ", reqFile)
 	// Check if reqFile is outside the parent directory
 	// cwd must be a substring of reqFile
-	fmt.Println("ProjectDir: ", projectDir)
-	fmt.Println("Is prefix: ", strings.HasPrefix(reqFile, projectDir))
+	// fmt.Println("ProjectDir: ", projectDir)
+	// fmt.Println("Is prefix: ", strings.HasPrefix(reqFile, projectDir))
 	if !strings.HasPrefix(reqFile, projectDir) {
 		res.HandleStatusNotFound()
 		if (req.Headers[CONNECTION] == CLOSE) {
@@ -122,12 +122,12 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 		return res
 	}
 	res.FilePath = reqFile
-	fmt.Println("ReqFile: ", reqFile)
+	// fmt.Println("ReqFile: ", reqFile)
 	// Read file
 	res.AddProto(responseProto)
 	stats, err := os.Stat(reqFile)
 	if errors.Is(err, os.ErrNotExist) {
-		log.Println("No file or invalid file", err)
+		// log.Println("No file or invalid file", err)
 		res.HandleStatusNotFound()
 		if (req.Headers[CONNECTION] == CLOSE) {
 			res.Headers[CONNECTION] = CLOSE
@@ -135,7 +135,7 @@ func (s *Server) HandleGoodRequest(req *Request) (res *Response) {
 		return res
 	}
 	res.StatusCode = 200 
-	fmt.Println("Stats: ", stats)
+	// fmt.Println("Stats: ", stats)
 	res.Headers["Content-Length"] = strconv.FormatInt(stats.Size(), 10)
 	res.Headers["Content-Type"] = MIMETypeByExtension(filepath.Ext(reqFile))
 	res.Headers["Date"] = FormatTime(time.Now())
@@ -151,7 +151,7 @@ func (res *Response) Write(w io.Writer) error {
 	bw := bufio.NewWriter(w)
 	// Write status line
 	statusLine := fmt.Sprintf("%v %v %v\r\n", res.Proto, res.StatusCode, statusText[res.StatusCode])
-	fmt.Println("Write statusLine: ",statusLine)
+	// fmt.Println("Write statusLine: ",statusLine)
 	if _, err := bw.WriteString(statusLine); err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (res *Response) Write(w io.Writer) error {
 		if _, err := bw.WriteString(keyValue); err != nil {
 			return err
 		}
-		fmt.Println("Write header: ",keyValue)
+		// fmt.Println("Write header: ",keyValue)
 	}
 	if _, err := bw.WriteString("\r\n"); err != nil {
 		return err
@@ -183,11 +183,11 @@ func (res *Response) Write(w io.Writer) error {
 		if _, err := bw.Write(data); err != nil {
 			return err
 		}
-		fmt.Println("Write data:", len(data))
+		// fmt.Println("Write data:", len(data))
 	}
-	fmt.Println("Write done")
+	// fmt.Println("Write done")
 	if err := bw.Flush(); err != nil {
-		log.Println("Flush error: ", err)
+		// log.Println("Flush error: ", err)
 		return nil
 	}
 	return nil

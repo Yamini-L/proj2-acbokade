@@ -36,7 +36,7 @@ func splitFullRequestIntoLines(fullRequest string) ([]string) {
 	for {
 		index := strings.Index(fullRequest, carriageReturnNewLine)
 		if index != -1 {
-			fmt.Println("next line", fullRequest[:index])
+			// fmt.Println("next line", fullRequest[:index])
 			requestLines = append(requestLines, fullRequest[:index])
 		}
 		if index == -1 {
@@ -84,20 +84,20 @@ func ReadAllLines(conn net.Conn, remaining *string) ([][]string, error) {
 	n, err := conn.Read(buf)
 	if err != nil {
 		if err == io.EOF {
-			fmt.Println("EOF encountered")
+			// fmt.Println("EOF encountered")
 		}
-		fmt.Println("error before break", err)
+		// fmt.Println("error before break", err)
 		*remaining += string(buf[:n])
 		return nil, err
 	}
 	*remaining += string(buf[:n])
-	fmt.Println("Before remaining", *remaining, len(*remaining))
+	// fmt.Println("Before remaining", *remaining, len(*remaining))
 	requestsLinesArr = checkForFullRequestsInString(remaining)
 	if len(requestsLinesArr) > 0 {
 		linesArr = append(linesArr, requestsLinesArr...)
 	}
-	fmt.Println("After remaining", *remaining, len(*remaining))
-	fmt.Println("LinesArr", linesArr)
+	// fmt.Println("After remaining", *remaining, len(*remaining))
+	// fmt.Println("LinesArr", linesArr)
 	return linesArr, nil
 }
 
@@ -113,7 +113,7 @@ func ReadAllRequests(conn net.Conn, remaining *string) ([][]string, error){
 // Method which parses initial request line 
 func parseRequestLine(line string) (string, string, string, error) {
 	fields := strings.SplitN(line, " ", 3)
-	fmt.Println("fields", fields, len(fields))
+	// fmt.Println("fields", fields, len(fields))
 	if len(fields) != 3 {
 		return "", "", "", fmt.Errorf("could not parse the request line")
 	} 
@@ -147,13 +147,13 @@ func HandleRequest(requestString []string) (req *Request, errors []error) {
 		key = CanonicalHeaderKey(key)
 		// Remove all leading and trailing space from value
 		value = strings.TrimSpace(value)
-		fmt.Println("Key value", key, value)
+		// fmt.Println("Key value", key, value)
 		if key == HOST {
-			fmt.Println("Setting host", value)
+			// fmt.Println("Setting host", value)
 			req.Host = value
 		} 
 		if key == CONNECTION {
-			fmt.Println("Setting Connection", value)
+			// fmt.Println("Setting Connection", value)
 			req.Headers[CONNECTION] = value
 		}
 		remainingLines = remainingLines[1:]
@@ -166,24 +166,24 @@ func HandleRequest(requestString []string) (req *Request, errors []error) {
 	initialRequestLine := requestString[0]
 	req.Method, req.URL, req.Proto, err = parseRequestLine(string(initialRequestLine))
 	if err != nil {
-		fmt.Println("Error while parsing request line", err)
+		// fmt.Println("Error while parsing request line", err)
 		errors = append(errors, err)
 		return req, errors
 	}
-	fmt.Println("Method: ", req.Method)
+	// fmt.Println("Method: ", req.Method)
 	// Only GET method is supported and well formed URL starts with /
 	if req.Method != GET {
-		fmt.Println("Invalid method")
+		// fmt.Println("Invalid method")
 		errors = append(errors, fmt.Errorf("invalid method"))
 		return req, errors
 	}
 	if len(req.URL) == 0 || req.URL[0] != '/' {
-		fmt.Println("URL doesnt start with slash")
+		// fmt.Println("URL doesnt start with slash")
 		errors = append(errors, fmt.Errorf("url doesnt start with slash"))
 		return req, errors
 	}
 	if req.Proto != responseProto {
-		fmt.Println("protocol is not HTTP/1.1")
+		// fmt.Println("protocol is not HTTP/1.1")
 		errors = append(errors, fmt.Errorf("protocol is not HTTP/1.1"))
 		return req, errors
 	}

@@ -1,0 +1,46 @@
+HTTP/1.1 200 OK
+Content-Length: 394
+Content-Type: text/html; charset=utf-8
+Date: Sat, 11 Feb 2023 00:58:44 GMT
+Last-Modified: Tue, 07 Feb 2023 06:07:22 GMT
+
+<html>
+
+<head>
+    <title>Basic index file for website 1</title>
+</head>
+
+<body>
+    <h1>This is a basic index file for website 1</h1>
+    You can use this for testing.
+    <ul>
+        <li><a href=UCSD_Seal.png alt="UCSD Seal">UCSD Seal</a>
+        <li><a href=kitten.jpg alt="Kitten">Kitten photo</a>
+        <li><a href=subdir/>A subdirectory</a>
+    </ul>
+</body>
+
+</html>
+HTTP/1.1 200 OK
+Content-Length: 394
+Content-Type: text/html; charset=utf-8
+Date: Sat, 11 Feb 2023 00:58:44 GMT
+Last-Modified: Tue, 07 Feb 2023 06:07:22 GMT
+
+<html>
+
+<head>
+    <title>Basic index file for website 1</title>
+</head>
+
+<body>
+    <h1>This is a basic index file for website 1</h1>
+    You can use this for testing.
+    <ul>
+        <li><a href=UCSD_Seal.png alt="UCSD Seal">UCSD Seal</a>
+        <li><a href=kitten.jpg alt="Kitten">Kitten photo</a>
+        <li><a href=subdir/>A subdirectory</a>
+    </ul>
+</body>
+
+</html>
